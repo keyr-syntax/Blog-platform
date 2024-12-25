@@ -1,0 +1,37 @@
+.toggler {
+  font-size: "22px";
+  color: white;
+  border-color: white;
+}
+.toggler .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff'  viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+.offCanvas-close-button .btn-close {
+  filter: invert(1);
+  color: white;
+}
+.navbar-dropdown {
+  display: block;
+}
+.navbar-mobile-links a {
+  display: none;
+}
+@media (max-width: 767px) {
+  .navbar-dropdown {
+    display: none;
+  }
+  .navbar-mobile-links a {
+    display: flex;
+  }
+}
+.navbar-dropdown .dropdown-item {
+  background-color: #151533 !important;
+  color: white !important;
+  transition: none !important;
+}
+
+.navbar-dropdown .dropdown-item:hover {
+  background-color: #151533 !important;
+  color: #f8f9fa !important;
+  outline: 1px solid rgba(255, 255, 255, 0.3);
+}

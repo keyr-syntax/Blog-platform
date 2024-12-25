@@ -1,0 +1,57 @@
+@media (min-width: 768px) {
+  .horizontal-scroll {
+    margin-top: 70px !important;
+  }
+  .blog-grid {
+    width: 100% !important;
+  }
+}
+@media (min-width: 870px) {
+  .blog-grid {
+    width: 100% !important;
+  }
+}
+
+@media (min-width: 1000px) {
+  .blog-grid {
+    width: 90% !important;
+  }
+}
+.horizontal-scroll {
+  scrollbar-color: white transparent;
+  scrollbar-width: thin;
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-thumb {
+  background-color: white;
+  border-radius: 10px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.horizontal-scroll {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  /* WebKit */
+  width: 0;
+  height: 0;
+}
+.horizontal-scroll-button {
+  background-color: #151533;
+  border: 1px solid rgb(255, 255, 255, 0.2);
+  border-radius: 50%;
+  padding: 10px;
+}
+@media only screen and (min-width: 768px) {
+  .horizontal-scroll-button {
+    margin-top: 65px;
+  }
+}

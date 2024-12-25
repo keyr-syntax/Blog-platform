@@ -1,0 +1,32 @@
+.image-upload-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 15px;
+}
+.blog-editor-buttons {
+  display: flex;
+  flex-direction: row;
+}
+@media (max-width: 768px) {
+  .image-upload-container {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .upload-image-button-mobile {
+    display: none;
+  }
+  .image-selector-mobile {
+    display: none;
+  }
+}
+
+@media only screen and (max-width: 500px) {
+  .blog-editor-buttons {
+    flex-direction: column;
+  }
+}
