@@ -32,12 +32,17 @@ DB_NAME=mySQL database name
 DB_USER=mySQL database username
 
 DB_PASSWORD=mySQL database password
+
 DB_HOST=localhost
+
 DB_DIALECT=mysql
-TOKEN_SECRET =
-  generate secret key for passport JWT
+
+TOKEN_SECRET = generate secret key for passport JWT
+
 cloud_name=cloudinary image storage name
+
 api_key=cloudinary api_key
+
 api_secret=cloudinary api_secret
 
 
