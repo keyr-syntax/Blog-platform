@@ -26,8 +26,11 @@ To run the code in your PC, use the following
 4. add the following values in the .env file
 
 OPENAI_API_KEY=your openai_api_key
+
 DB_NAME=mySQL database name
+
 DB_USER=mySQL database username
+
 DB_PASSWORD=mySQL database password
 DB_HOST=localhost
 DB_DIALECT=mysql
