@@ -23,7 +23,8 @@ To run the code in your PC, use the following
 1. to install dependencies use npm install
 2. to run the backend, go to backend folder then write npm start
 3. to run the frontend, go to frontend folder then write npm run dev
-4. add the following values in the .env file
+
+Go to the backend folder then add the following values in the .env file
 
 OPENAI_API_KEY=your openai_api_key
 
