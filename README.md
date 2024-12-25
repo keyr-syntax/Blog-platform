@@ -1,4 +1,5 @@
 see deployed website here--> https://syntax-blog-platform-project.keyrunasir.com/
+
 use the following credentials if necessary username = Admin, email= admin@gmail.com, password= admin
 
 This is a blog platform built using JavaScript, React/Vite, React-Bootstrap, Node.js, Express.js, and a MySQL database.
