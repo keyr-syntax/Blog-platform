@@ -2,7 +2,7 @@ This is a blog platform built using JavaScript, React/Vite, React-Bootstrap, Nod
 
 See deployed website here--> https://syntax-blog-platform-project.keyrunasir.com/
 
-Use the following credentials if necessary username = Admin, email= admin@gmail.com, password= admin
+Use the following credentials if necessary username = syntax blog, email= syntax@gmail.com, password= admin
 
 
 The blog platform has included all Must-Have Features, Bonus Features as well as additional Extra Features.
