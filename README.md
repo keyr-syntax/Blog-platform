@@ -16,6 +16,7 @@ Bonus Features:
   1. Integrated TinyMCE Rich Text Editor for writing and formatting posts.
   2. Passport.js for user authentication and profile management.
   3. Chart.js for visualizing blog analytics, including views, likes, and shares.
+  4. Notification system where users get notified when comment, reply or like is added
 
 Extra Features:
   1. AI Integration: Leverages ChatGPT in the blog editor to help users generate content or brainstorm ideas.
