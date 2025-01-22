@@ -1,13 +1,13 @@
 import { BlogContext } from "./ContextProvider.jsx";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import Dropdown from "react-bootstrap/Dropdown";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import Table from "react-bootstrap/Table";
 
 function DraftBlogs() {
-  const { blogcontent, fetchallblogs, BACKEND_API, setBlogcontent } =
-    useContext(BlogContext);
+  const { fetchallblogs, BACKEND_API, fetchTopBlogs } = useContext(BlogContext);
+  const [draftBlogList, setDraftBlogList] = useState([]);
 
   useEffect(() => {
     fetchBlogsSavedAsDraft();
@@ -26,7 +26,8 @@ function DraftBlogs() {
       });
       const response = await data.json();
       if (response.success === true) {
-        setBlogcontent(response.post);
+        setDraftBlogList(response.post);
+        fetchTopBlogs();
       } else if (response.success === false) {
         toast.error(response.message);
       }
@@ -52,9 +53,9 @@ function DraftBlogs() {
       const response = await data.json();
       if (response.success === true) {
         const post = response.post;
-        setBlogcontent(post);
+        setDraftBlogList(post);
         fetchBlogsSavedAsDraft();
-
+        fetchTopBlogs();
         const published = response.post.isPublished;
         {
           published === true && toast.success("Blog published successfully");
@@ -84,7 +85,8 @@ function DraftBlogs() {
         const response = await data.json();
         if (response.success === true) {
           fetchallblogs();
-
+          fetchBlogsSavedAsDraft();
+          fetchTopBlogs();
           toast.success(response.message);
         } else if (response.success === false) {
           toast.error(response.message);
@@ -96,7 +98,7 @@ function DraftBlogs() {
   };
   return (
     <>
-      {blogcontent && blogcontent.length > 0 ? (
+      {draftBlogList && draftBlogList.length > 0 ? (
         <>
           <p
             style={{
@@ -124,7 +126,7 @@ function DraftBlogs() {
               </tr>
             </thead>
             <tbody>
-              {blogcontent.map(
+              {draftBlogList.map(
                 (blog) =>
                   blog && (
                     <tr style={{ textWrap: "wrap" }} key={blog.id}>

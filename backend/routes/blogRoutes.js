@@ -56,7 +56,7 @@ router.put(
 );
 
 router.put(
-  "/updatebloglikes/:id",
+  "/updatebloglikes/:id/:authorID",
   userAuthenticationMiddleware,
   updateBlogLikes
 );

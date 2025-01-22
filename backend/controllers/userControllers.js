@@ -4,9 +4,10 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const USER = require("../models/userModel.js");
 const BLOG = require("../models/BlogModel.js");
-
+const { Op } = require("sequelize");
 require("dotenv").config();
-const TOKEN_SECRET = process.env.TOKEN_SECRET;
+const TOKEN_SECRET =
+  "f7184f99b71a947afe96623b9811e04c455955c734ec1e7ddb917734e03128f2126b101e60d61e4ad7245295178378bf44fbc1e4b57092ba0e82faa73a76379c";
 
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -265,12 +266,13 @@ const fetchAuthorProfile = async (req, res) => {
         as: "blogs_list",
         where: {
           authorID: id,
+          id: { [Op.ne]: req.params.blogID },
         },
         limit: 5,
         order: [["createdAt", "DESC"]],
       },
     });
-
+    console.log("fetchoneuser", fetchoneuser);
     if (fetchoneuser) {
       return res.status(200).json({
         success: true,
@@ -291,9 +293,12 @@ const fetchAuthorProfile = async (req, res) => {
     });
   }
 };
+
 const updateUserProfile = async (req, res) => {
   try {
     const id = req.user.id;
+    const updateUsername = req.body.updateUsername;
+    const updateProfileImage = req.body.updateProfileImage;
     const findUserByPk = await USER.findByPk(id);
     if (findUserByPk) {
       const updateUser = await findUserByPk.update({
@@ -313,6 +318,26 @@ const updateUserProfile = async (req, res) => {
         is_blogger: req.body.is_blogger,
       });
       if (updateUser) {
+        if (updateUsername === true) {
+          const findBlogs = await BLOG.findAll({
+            where: { authorID: id },
+          });
+
+          for (const blog of findBlogs) {
+            blog.author = req.body.username;
+            await blog.save();
+          }
+        }
+        if (updateProfileImage === true) {
+          const findBlogs = await BLOG.findAll({
+            where: { authorID: id },
+          });
+
+          for (const blog of findBlogs) {
+            blog.author_profile_image = req.body.profile_image;
+            await blog.save();
+          }
+        }
         return res.status(201).json({
           success: true,
           message: "Profile updated successfully",
@@ -337,6 +362,7 @@ const updateUserProfile = async (req, res) => {
     });
   }
 };
+
 const updateUserByAdmin = async (req, res) => {
   try {
     const id = req.params.id;

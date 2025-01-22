@@ -5,6 +5,7 @@ const BLOG_LIKES_COUNTER = require("../models/BlogLikesCounter.js");
 const BLOG_SHARE_COUNTER = require("../models/BlogSharesCounter.js");
 const { Op } = require("sequelize");
 const BLOG_TAGS = require("../models/BlogTagsModel.js");
+const NOTIFICATION = require("../models/NotificationModel.js");
 
 const createBlog = async (req, res) => {
   try {
@@ -236,6 +237,13 @@ const updateBlogLikes = async (req, res) => {
         likes: findPostByPk.likes - 1,
       });
       const deleteUser = await findUser.destroy();
+      const findNotification = await NOTIFICATION.findOne({
+        where: {
+          userID: req.user.id,
+          blogID: id,
+        },
+      });
+      await findNotification.destroy();
 
       if (updatePost && deleteUser) {
         return res.status(201).json({
@@ -261,7 +269,20 @@ const updateBlogLikes = async (req, res) => {
         authorID: findPostByPk.authorID,
         author: findPostByPk.author,
       });
-      console.log("updatePost", updatePost);
+      const createNotification = await NOTIFICATION.create({
+        commentID: null,
+        userID: req.user.id,
+        userName: req.user.username,
+        commentBody: null,
+        isComment: false,
+        isReply: false,
+        isLike: true,
+        blogID: req.params.id,
+        authorIDOrRepliedTo: req.params.authorID,
+        isNotified: false,
+      });
+      console.log("createNotification", createNotification);
+
       if (updatePost && bloglikescount) {
         return res.status(201).json({
           success: true,
@@ -612,6 +633,11 @@ const changeBlogSchedule = async (req, res) => {
 const fetchTopBlogs = async (req, res) => {
   try {
     const topBlogs = await BLOG.findAll({
+      where: {
+        isPublished: true,
+        isDraft: false,
+        isScheduled: false,
+      },
       order: [["views", "DESC"]],
     });
 

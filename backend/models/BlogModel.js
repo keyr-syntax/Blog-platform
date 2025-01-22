@@ -25,8 +25,6 @@ BLOG.init(
     authorID: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: "USER",
         key: "id",

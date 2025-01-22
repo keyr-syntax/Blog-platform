@@ -17,7 +17,7 @@ import Dropdown from "react-bootstrap/Dropdown";
 import { CircleUserRound } from "lucide-react";
 import { LogOut } from "lucide-react";
 import { Settings } from "lucide-react";
-
+import { Bell } from "lucide-react";
 function NavigationBar() {
   const {
     keyword,
@@ -26,6 +26,7 @@ function NavigationBar() {
     userProfilePicture,
     loggedInUserName,
     isLoggedIn,
+    isUserAdmin,
     userAuthentication,
     BACKEND_API,
     handleUserLogout,
@@ -35,22 +36,19 @@ function NavigationBar() {
     handleShowModalForLogin,
     showModalForSignUp,
     showModalForLogin,
+    countNotificationNotSeen,
   } = useContext(BlogContext);
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("Admin");
+  const [email, setEmail] = useState("admin@gmail.com");
+  const [password, setPassword] = useState("admin");
   const [isAdmin, setIsAdmin] = useState(false);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [newNotifications, setNewNotifications] = useState("");
   const handleClose = () => setShowOffcanvas(false);
   const handleShow = () => setShowOffcanvas(true);
-
   const [showModalForUserProfile, setShowModalForUserProfile] = useState(false);
   const handleCloseModalForUserProfile = () =>
     setShowModalForUserProfile(false);
   const handleShowModalForUserProfile = () => setShowModalForUserProfile(true);
-
   const getFirstLetterOfName = (username) => username.charAt(0).toUpperCase();
 
   const handleLoginUser = async (e) => {
@@ -74,13 +72,12 @@ function NavigationBar() {
       if (response.success === true) {
         toast.success(response.message);
         localStorage.setItem("token", response.token);
-        console.log("Login response", response.user);
+
         setEmail("");
         setUsername("");
         setPassword("");
         userAuthentication();
         handleCloseModalForLogin();
-        console.log("User Login", response);
       } else if (response.success === false) {
         toast.success(response.message);
         console.log("User Login", response);
@@ -117,10 +114,8 @@ function NavigationBar() {
         setPassword("");
         userAuthentication();
         handleCloseModalForSignUp();
-        console.log("User registration", response);
       } else if (response.success === false) {
         toast.success(response.message);
-        console.log("User registration", response);
       }
     } catch (error) {
       console.log("Error while registering user", error);
@@ -239,6 +234,19 @@ function NavigationBar() {
                       color: "white",
                     }}
                   >
+                    {isUserAdmin === true && (
+                      <Dropdown.Item
+                        style={{
+                          color: "white",
+                          border: "1px solid rgb(255,255,255,0.2)",
+                          marginBottom: "3px",
+                        }}
+                        as={Link}
+                        to={`/users`}
+                      >
+                        Manage users
+                      </Dropdown.Item>
+                    )}
                     <Dropdown.Item
                       style={{
                         color: "white",
@@ -246,9 +254,9 @@ function NavigationBar() {
                         marginBottom: "3px",
                       }}
                       as={Link}
-                      to={`/users`}
+                      to={`/createblog`}
                     >
-                      manage users
+                      Write blog
                     </Dropdown.Item>
                     <Dropdown.Item
                       style={{
@@ -259,7 +267,7 @@ function NavigationBar() {
                       as={Link}
                       to={`/manageblogs`}
                     >
-                      Manage blogs
+                      Published blogs
                     </Dropdown.Item>
 
                     <Dropdown.Item
@@ -368,9 +376,24 @@ function NavigationBar() {
                     borderRadius: "6px",
                   }}
                   as={Link}
+                  to={`/createblog`}
+                >
+                  Write blog
+                </Link>
+                <Link
+                  onClick={handleClose}
+                  style={{
+                    color: "white",
+                    textDecoration: "none",
+                    border: "1px solid rgb(255,255,255,0.2)",
+                    width: "90%",
+                    padding: "5px 10px",
+                    borderRadius: "6px",
+                  }}
+                  as={Link}
                   to={`/manageblogs`}
                 >
-                  Manage blogs
+                  Published blogs
                 </Link>
 
                 <Link
@@ -469,19 +492,29 @@ function NavigationBar() {
 
           <div className="d-flex align-items-center">
             {isLoggedIn && (
-              <Nav.Link
-                as={Link}
-                to="/createblog"
+              <Link
+                to="/notifications"
                 style={{
-                  textWrap: "nowrap",
-                  marginRight: "15px",
-                  fontSize: "18px",
+                  marginRight: "25px",
+                  color: "white",
+                  textDecoration: "none",
                 }}
               >
-                Write blog
-              </Nav.Link>
+                <Bell size={30} />
+                {countNotificationNotSeen > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "8%",
+                      color: "red",
+                      fontWeight: "bolder",
+                    }}
+                  >
+                    {countNotificationNotSeen}
+                  </span>
+                )}
+              </Link>
             )}
-
             {!isLoggedIn && (
               <Nav.Link
                 style={{
@@ -490,7 +523,7 @@ function NavigationBar() {
                   fontSize: "18px",
                 }}
                 as={Link}
-                onClick={handleShowModalForSignUp}
+                onClick={handleShowModalForLogin}
               >
                 Sign Up/Login
               </Nav.Link>
@@ -635,20 +668,18 @@ function NavigationBar() {
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
+                flexWrap: "wrap",
               }}
             >
               <Button
-                style={{ width: "30%" }}
+                style={{ marginBottom: "5px" }}
                 type="submit"
                 variant="primary"
-                onClick={() => {
-                  setIsAdmin(true);
-                }}
               >
                 Submit
               </Button>
               <Button
-                style={{ backgroundColor: "red", width: "30%" }}
+                style={{ backgroundColor: "red" }}
                 type="button"
                 onClick={handleCloseModalForSignUp}
               >
@@ -758,13 +789,18 @@ function NavigationBar() {
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
+                flexWrap: "wrap",
               }}
             >
-              <Button style={{ width: "30%" }} type="submit" variant="primary">
+              <Button
+                style={{ marginBottom: "5px" }}
+                type="submit"
+                variant="primary"
+              >
                 Submit
               </Button>
               <Button
-                style={{ backgroundColor: "red", width: "30%" }}
+                style={{ backgroundColor: "red" }}
                 type="button"
                 onClick={handleCloseModalForLogin}
               >

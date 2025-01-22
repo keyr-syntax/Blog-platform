@@ -1,5 +1,5 @@
 import { BlogContext } from "./ContextProvider.jsx";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import Dropdown from "react-bootstrap/Dropdown";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -7,8 +7,8 @@ import Table from "react-bootstrap/Table";
 import "./ManageBlog.css";
 
 function ManageBlog() {
-  const { blogcontent, fetchallblogs, BACKEND_API, setBlogcontent } =
-    useContext(BlogContext);
+  const { fetchallblogs, BACKEND_API, fetchTopBlogs } = useContext(BlogContext);
+  const [publishedBlogList, setPublishedBlogList] = useState([]);
 
   useEffect(() => {
     fetchAllBlogsByAuthorName();
@@ -30,7 +30,7 @@ function ManageBlog() {
       );
       const response = await data.json();
       if (response.success === true) {
-        setBlogcontent(response.post);
+        setPublishedBlogList(response.post);
         console.log("Manage Blogs", response.post);
       } else if (response.success === false) {
         toast.error(response.message);
@@ -57,9 +57,10 @@ function ManageBlog() {
       const response = await data.json();
       if (response.success === true) {
         const post = response.post;
-        setBlogcontent(post);
+        setPublishedBlogList(post);
         fetchallblogs();
-
+        fetchAllBlogsByAuthorName();
+        fetchTopBlogs();
         const published = response.post.isPublished;
         {
           published === true && toast.success("Blog published successfully");
@@ -89,7 +90,8 @@ function ManageBlog() {
         const response = await data.json();
         if (response.success === true) {
           fetchallblogs();
-
+          fetchAllBlogsByAuthorName();
+          fetchTopBlogs();
           toast.success(response.message);
         } else if (response.success === false) {
           toast.error(response.message);
@@ -102,7 +104,7 @@ function ManageBlog() {
 
   return (
     <>
-      {blogcontent && blogcontent.length > 0 ? (
+      {publishedBlogList && publishedBlogList.length > 0 && (
         <>
           <p
             style={{
@@ -136,7 +138,7 @@ function ManageBlog() {
               </tr>
             </thead>
             <tbody>
-              {blogcontent.map(
+              {publishedBlogList.map(
                 (blog) =>
                   blog && (
                     <tr
@@ -266,7 +268,8 @@ function ManageBlog() {
             </tbody>
           </Table>
         </>
-      ) : (
+      )}
+      {publishedBlogList && publishedBlogList.length === 0 && (
         <div
           style={{
             margin: "160px auto",

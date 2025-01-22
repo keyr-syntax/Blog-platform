@@ -7,9 +7,13 @@
   gap: 15px;
 }
 .blog-editor-buttons {
+  width: 100%;
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
+
 @media (max-width: 768px) {
   .image-upload-container {
     display: none;
@@ -25,8 +29,15 @@
   }
 }
 
-@media only screen and (max-width: 500px) {
+@media only screen and (max-width: 600px) {
   .blog-editor-buttons {
+    display: flex;
     flex-direction: column;
+  }
+}
+
+@media only screen and (min-width: 600px) {
+  .blog-editor-buttons {
+    gap: 45px;
   }
 }

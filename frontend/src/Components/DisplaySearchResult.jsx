@@ -12,8 +12,18 @@ import { Eye } from "lucide-react";
 import { FaShare } from "react-icons/fa";
 
 function DisplaySearchResult() {
-  const { searchResult, keyword, tag_keyword, setKeyword, searchBlogs } =
-    useContext(BlogContext);
+  const {
+    searchResult,
+    keyword,
+    tag_keyword,
+    setKeyword,
+    setTag_keyword,
+    searchBlogs,
+    displaySearchResult,
+    displaySearchResultByTag,
+    setDisplaySearchResult,
+    setDisplaySearchResultByTag,
+  } = useContext(BlogContext);
 
   const getFirstLetterOfName = (username) => username.charAt(0).toUpperCase();
 
@@ -38,6 +48,9 @@ function DisplaySearchResult() {
             aria-label="Search"
             value={keyword}
             onChange={(e) => {
+              setTag_keyword("");
+              setDisplaySearchResult(false);
+              setDisplaySearchResultByTag(false);
               setKeyword(e.target.value);
             }}
           />
@@ -62,15 +75,15 @@ function DisplaySearchResult() {
         </Form>
       </Container>
 
-      {searchResult && searchResult.length > 0 ? (
+      {searchResult && searchResult.length > 0 && (
         <>
           <Container style={{ margin: "70px auto 10px auto" }}>
-            {keyword !== "" && (
+            {displaySearchResult && (
               <h4 style={{ color: "white", textAlign: "center" }}>
                 {searchResult.length} Search Results for &quot;{keyword}&quot;
               </h4>
             )}
-            {tag_keyword !== "" && (
+            {displaySearchResultByTag && (
               <h4 style={{ color: "white", textAlign: "center" }}>
                 {searchResult.length} Search Results for &quot;{tag_keyword}
                 &quot;
@@ -264,11 +277,9 @@ function DisplaySearchResult() {
             ))}
           </Row>
         </>
-      ) : (
-        <Container
-          style={{ margin: "70px auto 10px auto" }}
-          // className="d-block d-md-none"
-        >
+      )}
+      {searchResult && searchResult.length <= 0 && (
+        <Container style={{ margin: "70px auto 10px auto" }}>
           <h4 style={{ color: "white", textAlign: "center" }}>
             No Blogs Found
           </h4>

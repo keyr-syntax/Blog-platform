@@ -5,16 +5,18 @@ import toast, { Toaster } from "react-hot-toast";
 export const BlogContext = createContext();
 // eslint-disable-next-line react/prop-types
 function ContextProvider({ children }) {
-  const BACKEND_API = "http://localhost:5000";
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const BACKEND_API = "https://test-subdomain.keyrunasir.com";
+  // const BACKEND_API = "http://localhost:5000";
+
+  const [username, setUsername] = useState("syntax blog");
+  const [email, setEmail] = useState("syntax@gmail.com");
+  const [password, setPassword] = useState("admin");
   const [blogcontent, setBlogcontent] = useState([]);
   const [imagelist, setImagelist] = useState([]);
   const [searchResult, setSearchResult] = useState([]);
   const [loggedInUserName, setLoggedInUserName] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(true);
+  const [isUserAdmin, setIsUserAdmin] = useState(true);
   const [isBlogger, setIsBlogger] = useState(false);
   const [userProfilePicture, setUserProfilePicture] = useState(null);
   const [blogdetails, setBlogdetails] = useState("");
@@ -25,20 +27,25 @@ function ContextProvider({ children }) {
   const [topBlogsList, setTopBlogsList] = useState([]);
   const [blogsByOtherAuthors, setBlogsByOtherAuthors] = useState([]);
   const [allBlogTags, setAllBlogTags] = useState([]);
+  const [allNotifications, setAllNotifications] = useState([]);
+  const [countNotificationNotSeen, setCountNotificationNotSeen] = useState("");
   const [showModalForSignUp, setShowModalForSignUp] = useState(false);
   const handleCloseModalForSignUp = () => setShowModalForSignUp(false);
   const handleShowModalForSignUp = () => setShowModalForSignUp(true);
   const [showModalForLogin, setShowModalForLogin] = useState(false);
   const handleCloseModalForLogin = () => setShowModalForLogin(false);
   const handleShowModalForLogin = () => setShowModalForLogin(true);
+  const [displaySearchResult, setDisplaySearchResult] = useState(false);
+  const [displaySearchResultByTag, setDisplaySearchResultByTag] =
+    useState(false);
 
   useEffect(() => {
+    handleLoginUser();
     userAuthentication();
     fetchAllBlogTags();
     fetchallblogs();
     fetchTopBlogs();
   }, []);
-
   const userAuthentication = async () => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -54,9 +61,10 @@ function ContextProvider({ children }) {
         if (response.success === true) {
           setLoggedInUserName(response.user.username);
           setIsLoggedIn(true);
-          setIsAdmin(response.user.isAdmin);
+          setIsUserAdmin(response.user.isAdmin);
           setUserProfilePicture(response.user.profile_image);
           setIsBlogger(response.user.is_blogger);
+          fetchNotificationsForLoggedInUser();
         }
       } catch (error) {
         console.log("Error while authenticating", error.message);
@@ -67,13 +75,16 @@ function ContextProvider({ children }) {
     localStorage.removeItem("token");
     setLoggedInUserName("");
     setIsLoggedIn(false);
-    setIsAdmin(false);
+    setIsUserAdmin(false);
     setUserProfilePicture(null);
     setIsBlogger(false);
     toast.success("Logged-out");
   };
   const searchBlogs = async (keyword) => {
     try {
+      setTag_keyword("");
+      setDisplaySearchResult(false);
+      setDisplaySearchResultByTag(false);
       const data = await fetch(
         `${BACKEND_API}/api/blog/searchblogs?keyword=${encodeURIComponent(
           keyword
@@ -89,8 +100,10 @@ function ContextProvider({ children }) {
       console.log("Search result", response);
       if (response.success === true) {
         setSearchResult(response.post);
+        setDisplaySearchResult(true);
       } else if (response.success === false) {
-        setSearchResult(null);
+        setSearchResult([]);
+        setDisplaySearchResult(true);
       }
     } catch (error) {
       console.log("Error while fetching search result", error);
@@ -98,6 +111,9 @@ function ContextProvider({ children }) {
   };
   const searchBlogsByTag = async (tag_keyword) => {
     try {
+      setKeyword("");
+      setDisplaySearchResultByTag(false);
+      setDisplaySearchResult(false);
       const data = await fetch(
         `${BACKEND_API}/api/blog/searchblogsbytagname?tag_keyword=${encodeURIComponent(
           tag_keyword
@@ -112,8 +128,10 @@ function ContextProvider({ children }) {
       const response = await data.json();
       if (response.success === true) {
         setSearchResult(response.blogsByTagName);
+        setDisplaySearchResultByTag(true);
       } else if (response.success === false) {
-        setSearchResult(null);
+        setSearchResult([]);
+        setDisplaySearchResultByTag(true);
       }
     } catch (error) {
       console.log("Error while fetching search result", error);
@@ -180,42 +198,7 @@ function ContextProvider({ children }) {
       console.log("Error while fetching all images", error);
     }
   };
-  const handleCreateUser = async (e) => {
-    e.preventDefault();
-
-    try {
-      const data = await fetch(`${BACKEND_API}/api/user/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          email,
-          password,
-          isAdmin,
-        }),
-      });
-
-      const response = await data.json();
-
-      if (response.success === true) {
-        toast.success(response.message);
-        localStorage.setItem("token", response.token);
-        setEmail("");
-        setUsername("");
-        setPassword("");
-        userAuthentication();
-      } else if (response.success === false) {
-        toast.success(response.message);
-      }
-    } catch (error) {
-      console.log("Error while registering user", error);
-    }
-  };
-  const handleLoginUser = async (e) => {
-    e.preventDefault();
-
+  const handleLoginUser = async () => {
     try {
       const data = await fetch(`${BACKEND_API}/api/user/login`, {
         method: "POST",
@@ -331,7 +314,6 @@ function ContextProvider({ children }) {
       console.log("Error while fetching all blogs", error);
     }
   };
-
   const fetchAllBlogTags = async () => {
     try {
       const data = await fetch(`${BACKEND_API}/api/tags/fetchalltags`, {
@@ -346,6 +328,53 @@ function ContextProvider({ children }) {
       }
     } catch (error) {
       console.log("Error while fetching tags", error);
+    }
+  };
+  const fetchNotificationsForLoggedInUser = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const data = await fetch(
+        `${BACKEND_API}/api/notification/allnotifications`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const response = await data.json();
+      if (response.success === true) {
+        setAllNotifications(response.notification);
+        setCountNotificationNotSeen(response.countNotificationNotSeen);
+        console.log("response.notification", response.notification);
+        console.log("response.notification", response.countNotificationNotSeen);
+      } else if (response.success === false) {
+        setAllNotifications([]);
+      }
+    } catch (error) {
+      console.log("Error while fetching notification", error);
+    }
+  };
+  const markNotificationAsSeen = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const data = await fetch(
+        `${BACKEND_API}/api/notification/marknotificationasseen`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const response = await data.json();
+      if (response.success === true) {
+        fetchNotificationsForLoggedInUser();
+      }
+    } catch (error) {
+      console.log("Error while fetching notification", error);
     }
   };
 
@@ -363,11 +392,11 @@ function ContextProvider({ children }) {
           setBlogcontent,
           loggedInUserName,
           setLoggedInUserName,
-          isAdmin,
+          isUserAdmin,
           isLoggedIn,
           userAuthentication,
           setIsLoggedIn,
-          setIsAdmin,
+          setIsUserAdmin,
           blogdetails,
           setBlogdetails,
           fetchblogsByOtherAuthors,
@@ -376,8 +405,6 @@ function ContextProvider({ children }) {
           setKeyword,
           userProfilePicture,
           isBlogger,
-          handleCreateUser,
-          handleLoginUser,
           handleUserLogout,
           handleShowModalForSignUp,
           handleCloseModalForSignUp,
@@ -398,6 +425,15 @@ function ContextProvider({ children }) {
           searchBlogsByTag,
           tag_keyword,
           setTag_keyword,
+          fetchTopBlogs,
+          allNotifications,
+          countNotificationNotSeen,
+          fetchNotificationsForLoggedInUser,
+          markNotificationAsSeen,
+          displaySearchResult,
+          displaySearchResultByTag,
+          setDisplaySearchResult,
+          setDisplaySearchResultByTag,
         }}
       >
         {children}

@@ -6,6 +6,7 @@ import Container from "react-bootstrap/Container";
 import Modal from "react-bootstrap/Modal";
 import toast from "react-hot-toast";
 import Table from "react-bootstrap/Table";
+import Spinner from "react-bootstrap/Spinner";
 function ImageList() {
   const { fetchallimages, imagelist, BACKEND_API } = useContext(BlogContext);
   const [show, setShow] = useState(false);
@@ -105,15 +106,15 @@ function ImageList() {
           style={{
             margin: "10px auto 10px auto",
             width: "90%",
+            maxWidth: "600px",
           }}
           responsive="lg"
         >
           <thead>
             <tr style={{ textWrap: "wrap", textAlign: "start" }}>
-              <th>Image ID</th>
+              <th>ID</th>
               <th>Image</th>
               <th>Name</th>
-              <th>Created</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -131,12 +132,6 @@ function ImageList() {
                     </td>
                     <td>{image.name}</td>
 
-                    <td>
-                      {new Date(image.createdAt).toLocaleString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
                     <td>
                       <Button
                         onClick={() => {
@@ -230,7 +225,16 @@ function ImageList() {
                   }}
                   disabled={uploading}
                 >
-                  Uploading..
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                    />
+                    <span style={{ marginLeft: "3px" }}>Uploading Picture</span>
+                  </>
                 </Button>
               )}
               <Button

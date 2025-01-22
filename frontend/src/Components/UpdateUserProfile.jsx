@@ -5,13 +5,16 @@ import toast from "react-hot-toast";
 import { BlogContext } from "./ContextProvider.jsx";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Spinner from "react-bootstrap/Spinner";
 
 function UpdateUserProfile() {
-  const { BACKEND_API, userAuthentication } = useContext(BlogContext);
+  const { BACKEND_API, userAuthentication, fetchallblogs, fetchTopBlogs } =
+    useContext(BlogContext);
   const [username, setUsername] = useState("");
   const [updateUsername, setUpdateUsername] = useState(false);
   const [email, setEmail] = useState("");
   const [profile_image, setProfile_image] = useState("");
+  const [updateProfileImage, setUpdateProfileImage] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [showprofile_image, setShowprofile_image] = useState(false);
   const [base64Image, setBase64Image] = useState("");
@@ -27,6 +30,7 @@ function UpdateUserProfile() {
   const [emailPreference, setEmailPreference] = useState("");
   const [is_blogger, setis_blogger] = useState(false);
   const [bloggerPreference, setBloggerPreference] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const workPreferenceList = [
     "Yes, I am available for work",
     "No, I am not available for work",
@@ -84,6 +88,7 @@ function UpdateUserProfile() {
       if (response.success === true) {
         setUsername(response.user.username);
         setUpdateUsername(false);
+        setUpdateProfileImage(false);
         setEmail(response.user.email);
 
         setProfile_image(response.user.profile_image);
@@ -145,6 +150,7 @@ function UpdateUserProfile() {
         setProfile_image(response.image.imageURL);
         console.log("Image URL", response.image.imageURL);
         setShowprofile_image(true);
+        setUpdateProfileImage(true);
         toast.success("Image uploaded successfully");
         setImageUploading(false);
       } else if (response.success === false) {
@@ -167,6 +173,7 @@ function UpdateUserProfile() {
     e.preventDefault();
     const token = localStorage.getItem("token");
     try {
+      setIsLoading(true);
       const data = await fetch(`${BACKEND_API}/api/user/updateuserprofile`, {
         method: "PUT",
         headers: {
@@ -178,6 +185,7 @@ function UpdateUserProfile() {
           updateUsername: updateUsername,
           email: email,
           profile_image: profile_image,
+          updateProfileImage: updateProfileImage,
           biography: biography,
           profession: profession,
           location: location,
@@ -193,6 +201,9 @@ function UpdateUserProfile() {
       if (response.success === true) {
         toast.success(response.message);
         userAuthentication();
+        fetchallblogs();
+        fetchTopBlogs();
+        setIsLoading(false);
         navigate("/");
       } else if (response.success === false) {
         toast.error(response.message);
@@ -285,11 +296,10 @@ function UpdateUserProfile() {
                   src={profile_image}
                   alt="Profile"
                   style={{
-                    minWidth: "78px",
-                    maxHeight: "88px",
+                    width: "60px",
+                    height: "60px",
                     borderRadius: "50%",
                     objectFit: "cover",
-                    border: "1px solid white",
                   }}
                 />
               </div>
@@ -316,7 +326,7 @@ function UpdateUserProfile() {
 
             {profile_image !== "" && showprofile_image === true ? (
               <Button
-                style={{ width: "85%", backgroundColor: "red" }}
+                style={{ width: "85%", backgroundColor: "#0D6EFD" }}
                 onClick={() => {
                   setShowprofile_image(false);
                   setProfile_image("");
@@ -338,9 +348,22 @@ function UpdateUserProfile() {
                   }}
                   disabled={imageUploading}
                 >
-                  {imageUploading === true
-                    ? "Uploading Picture"
-                    : "Submit Picture"}
+                  {imageUploading === true ? (
+                    <>
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                      />
+                      <span style={{ marginLeft: "3px" }}>
+                        Uploading Picture
+                      </span>
+                    </>
+                  ) : (
+                    "Submit Picture"
+                  )}
                 </Button>
               </>
             )}
@@ -511,6 +534,20 @@ function UpdateUserProfile() {
           Submit
         </Button>
       </Form>
+      {isLoading && (
+        <Spinner
+          style={{
+            position: "fixed",
+            zIndex: "999",
+            top: "50%",
+            left: "50%",
+          }}
+          animation="border"
+          variant="primary"
+          role="status"
+          size="lg"
+        ></Spinner>
+      )}
     </>
   );
 }

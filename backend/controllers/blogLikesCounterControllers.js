@@ -1,4 +1,5 @@
 const BLOG_LIKES_COUNTER = require("../models/BlogLikesCounter.js");
+const NOTIFICATION = require("../models/NotificationModel.js");
 
 const fetchAllBlogLikes = async (req, res) => {
   try {
@@ -33,7 +34,7 @@ const isBlogLikedByUser = async (req, res) => {
         userID: req.user.id,
       },
     });
-    console.log("findBlog", findBlog);
+
     if (findBlog !== null) {
       return res.status(200).json({
         success: true,

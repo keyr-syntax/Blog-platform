@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { BlogContext } from "./ContextProvider.jsx";
-import { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
@@ -57,6 +57,7 @@ function ReadBlogs() {
     loggedInUserName,
     fetchblogsByOtherAuthors,
     blogsByOtherAuthors,
+    fetchNotificationsForLoggedInUser,
   } = useContext(BlogContext);
   const [commentBody, setcommentBody] = useState("");
   const [topLevelCommentID, setTopLevelCommentID] = useState("");
@@ -69,25 +70,73 @@ function ReadBlogs() {
   const [showModalToAddComment, setShowModalToAddComment] = useState(false);
   const [replyingTo, setReplyingTo] = useState("");
   const [isbloglikedbyuser, setIsBlogLikedByUser] = useState(false);
+  const [isComment, setIsComment] = useState(false);
+  const [isReply, setIsReply] = useState(false);
+  const [authorID, setAuthorID] = useState("");
   const handleClose = () => setShowModalToEditComment(false);
   const handleShow = () => setShowModalToEditComment(true);
   const handleshowModalToAddComment = () => setShowModalToAddComment(true);
   const handleCloseModalToAddComment = () => setShowModalToAddComment(false);
+  const [showModalForShare, setShowModalForShare] = useState(false);
+  const handleCloseModalForShare = () => setShowModalForShare(false);
+  const handleShowModalForShare = () => setShowModalForShare(true);
   const [authorProfile, setAuthorProfile] = useState("");
   const [is_available_for_work, setis_available_for_work] = useState(false);
   const [is_email_public, setis_email_public] = useState(false);
   const [moreBlogsBySameAuthor, setMoreBlogsBySameAuthor] = useState([]);
-
+  const commentRefs = useRef({});
   const { id } = useParams();
+  const { commentIDForNotification } = useParams();
   const urlToBeShared = encodeURIComponent(BLOGURL);
   const getFirstLetterOfName = (username) => username.charAt(0).toUpperCase();
 
   useEffect(() => {
     fetchblogbypk(id);
-    fetchAllComments(id);
     isBlogLikedByUser(id);
     isBlogSavedForLater(id);
   }, [id]);
+  const openNotification = (commentIDForNotification) => {
+    const refKey = `comment-${commentIDForNotification}`;
+    const ref = commentRefs.current[refKey];
+
+    if (ref && ref.current) {
+      ref.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    } else {
+      console.warn("Could not find ref for comment:", commentIDForNotification);
+    }
+  };
+
+  useEffect(() => {
+    const fetchCommentsAndScroll = async () => {
+      try {
+        await fetchAllComments(id);
+
+        if (commentIDForNotification) {
+          const maxAttempts = 2;
+          let attempts = 0;
+
+          const attemptScroll = () => {
+            attempts++;
+
+            openNotification(commentIDForNotification);
+
+            if (attempts < maxAttempts) {
+              setTimeout(attemptScroll, 300 * attempts);
+            }
+          };
+
+          attemptScroll();
+        }
+      } catch (error) {
+        console.error("Error in fetching comments or scrolling:", error);
+      }
+    };
+
+    fetchCommentsAndScroll();
+  }, [commentIDForNotification, id]);
 
   const fetchblogbypk = async (id) => {
     try {
@@ -110,10 +159,10 @@ function ReadBlogs() {
       console.log("Error while fetching post", error);
     }
   };
-  const fetchAuthorProfile = async (authorID) => {
+  const fetchAuthorProfile = async (bloggerID) => {
     try {
       const data = await fetch(
-        `${BACKEND_API}/api/user/fetchauthorprofile/${authorID}`,
+        `${BACKEND_API}/api/user/fetchauthorprofile/${bloggerID}/${id}`,
         {
           method: "GET",
           headers: {
@@ -128,6 +177,7 @@ function ReadBlogs() {
         setis_email_public(response.user.is_email_public);
         setAuthorProfile(response.user);
         setMoreBlogsBySameAuthor(response.blogs_list.blogs_list);
+        console.log("More blogs", response);
       }
     } catch (error) {
       console.log("Error while fetching author's profile");
@@ -203,8 +253,25 @@ function ReadBlogs() {
 
       if (response.success) {
         setAllComments(response.comment);
-
         setSumOfComments(response.sumOfComments);
+        const refs = {};
+        response.comment.forEach((comment) => {
+          refs[`comment-${comment.id}`] = React.createRef();
+          if (comment.replyComments && comment.replyComments.length > 0) {
+            comment.replyComments.forEach((reply) => {
+              refs[`comment-${reply.id}`] = React.createRef();
+              if (reply.replyComments && reply.replyComments.length > 0) {
+                reply.replyComments.forEach((reply) => {
+                  refs[`comment-${reply.id}`] = React.createRef();
+                });
+              }
+            });
+          }
+        });
+
+        commentRefs.current = refs;
+        console.log("All Comments", response);
+        console.log("All reply Comments", response.comment.replyComments);
       } else if (response.success === false) {
         setAllComments("");
       }
@@ -226,8 +293,9 @@ function ReadBlogs() {
           commentBody: commentBody,
           topLevelCommentID: topLevelCommentID,
           blogID: blogdetails.id,
-          author: blogdetails.author,
-          authorID: blogdetails.authorID,
+          authorID: authorID,
+          isComment: isComment,
+          isReply: isReply,
         }),
       });
       const response = await data.json();
@@ -241,6 +309,7 @@ function ReadBlogs() {
         fetchAllComments(blogdetails.id);
         setcommentBody("");
         setTopLevelCommentID("");
+        fetchNotificationsForLoggedInUser();
         handleCloseModalToAddComment();
       }
     } catch (error) {
@@ -265,6 +334,7 @@ function ReadBlogs() {
         if (response.success) {
           toast.success("Comment deleted");
           fetchAllComments(blogdetails.id);
+          fetchNotificationsForLoggedInUser();
         }
       } catch (error) {
         console.log("Error while updating blog", error);
@@ -324,64 +394,66 @@ function ReadBlogs() {
       <>
         {comment && (
           <Container
-            key={comment.id}
             fluid
+            key={comment.id}
+            ref={commentRefs.current[`comment-${comment.id}`]}
             style={{
               display: "flex",
-              flexDirection: "row",
-              justifyContent: "start",
+              flexDirection: "column",
+              justifyContent: "flex-end",
               alignItems: "center",
-              borderRadius: "6px",
-              margin: "5px auto 5px auto",
               width: "100%",
               border: "1px solid rgb(255,255,255,0.2)",
+              borderRadius: "6px",
+              gap: "10px",
             }}
           >
-            {comment.commented_by !== null && (
-              <Container
-                fluid
-                style={{
-                  height: "45px",
-                  width: "45px",
-                  objectFit: "cover",
-                  borderRadius: "50%",
-
-                  backgroundColor: "#151533",
-                  border: "1px solid rgb(255,255,255,0.2)",
-                  background: "green",
-                  fontSize: "22px",
-                  color: "white",
-                  fontWeight: "bold",
-                  alignItems: "center",
-                }}
-              >
-                {getFirstLetterOfName(comment.commented_by)}
-              </Container>
-            )}
             <Container
-              fluid
               style={{
                 display: "flex",
-                flexDirection: "column",
+                flexDirection: "row",
                 justifyContent: "start",
                 alignItems: "center",
-                gap: "10px",
               }}
             >
+              {comment.commented_by !== null && (
+                <Container
+                  fluid
+                  style={{
+                    height: "40px",
+                    width: "40px",
+                    borderRadius: "50%",
+                    backgroundColor: "#151533",
+                    border: "1px solid rgb(255,255,255,0.2)",
+                    background: "green",
+                    fontSize: "20px",
+                    color: "white",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                >
+                  {getFirstLetterOfName(comment.commented_by)}
+                </Container>
+              )}
               <Container
                 style={{
                   display: "flex",
-                  flexDirection: "row",
+                  flexDirection: "column",
                   flexWrap: "wrap",
                   justifyContent: "start",
                   alignItems: "start",
-                  gap: "20px",
                 }}
               >
                 <Card.Text style={{ textWrap: "nowrap" }}>
                   {comment.commented_by}
                 </Card.Text>{" "}
-                <Card.Text style={{ textWrap: "nowrap" }}>
+                <Card.Text
+                  style={{
+                    textWrap: "nowrap",
+                    marginTop: "-25px",
+                    fontSize: "14px",
+                  }}
+                >
                   {new Date(comment.createdAt).toLocaleString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -389,7 +461,158 @@ function ReadBlogs() {
                   })}
                 </Card.Text>
               </Container>
-              <Container fluid>{comment.commentBody}</Container>
+            </Container>
+
+            <Container fluid>{comment.commentBody}</Container>
+            <Container
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                justifyContent: "start",
+                alignItems: "start",
+              }}
+            >
+              {loggedInUserName === comment.commented_by && (
+                <Button
+                  style={{
+                    border: "1px solid rgb(255,255,255,0.2)",
+                    backgroundColor: "#151533",
+                    padding: "3px 10px",
+                    margin: "5px",
+                    fontSize: "12px",
+                  }}
+                  onClick={() => {
+                    if (isLoggedIn === true) {
+                      fetchComment(comment.id);
+                      handleShow();
+                    } else if (isLoggedIn === false) {
+                      handleShowModalForSignUp();
+                    }
+                  }}
+                >
+                  Edit
+                </Button>
+              )}
+              <Button
+                style={{
+                  border: "1px solid rgb(255,255,255,0.2)",
+                  backgroundColor: "#151533",
+                  padding: "3px 10px",
+                  margin: "5px",
+                  fontSize: "12px",
+                }}
+                onClick={() => {
+                  if (isLoggedIn === true) {
+                    setTopLevelCommentID(comment.id);
+                    setReplyingTo(comment.commented_by);
+                    setIsComment(false);
+                    setIsReply(true);
+                    setAuthorID(comment.userID);
+                    handleshowModalToAddComment();
+                  } else if (isLoggedIn === false) {
+                    handleShowModalForSignUp();
+                  }
+                }}
+              >
+                Reply
+              </Button>
+              {loggedInUserName === comment.commented_by && (
+                <Button
+                  style={{
+                    border: "1px solid rgb(255,255,255,0.2)",
+                    backgroundColor: "#151533",
+                    padding: "3px 10px",
+                    margin: "5px",
+                    fontSize: "12px",
+                  }}
+                  onClick={() => {
+                    if (isLoggedIn === true) {
+                      deleteComment(comment.id);
+                    } else if (isLoggedIn === false) {
+                      handleShowModalForSignUp();
+                    }
+                  }}
+                >
+                  Delete
+                </Button>
+              )}
+            </Container>
+          </Container>
+        )}
+
+        {comment.replyComments.length > 0 &&
+          comment.replyComments.map((reply) => (
+            <Container
+              key={reply.id}
+              ref={commentRefs.current[`comment-${reply.id}`]}
+              fluid
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
+                gap: "10px",
+                width: "95%",
+                border: "1px solid rgb(255,255,255,0.2)",
+                borderRadius: "6px",
+                margin: "3px 0px 3px 20px",
+              }}
+            >
+              <Container
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "start",
+                  alignItems: "center",
+                }}
+              >
+                {reply.commented_by !== null && (
+                  <Container
+                    fluid
+                    style={{
+                      height: "40px",
+                      width: "40px",
+                      borderRadius: "50%",
+                      backgroundColor: "#151533",
+                      border: "1px solid rgb(255,255,255,0.2)",
+                      background: "green",
+                      fontSize: "20px",
+                      color: "white",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                    }}
+                  >
+                    {getFirstLetterOfName(reply.commented_by)}
+                  </Container>
+                )}
+                <Container
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    flexWrap: "wrap",
+                    justifyContent: "start",
+                    alignItems: "start",
+                  }}
+                >
+                  <Card.Text style={{ textWrap: "nowrap" }}>
+                    {reply.commented_by}
+                  </Card.Text>{" "}
+                  <Card.Text
+                    style={{
+                      textWrap: "nowrap",
+                      marginTop: "-25px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    {new Date(reply.createdAt).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </Card.Text>
+                </Container>
+              </Container>
+              <Container fluid>{reply.commentBody}</Container>
               <Container
                 style={{
                   display: "flex",
@@ -399,17 +622,18 @@ function ReadBlogs() {
                   alignItems: "start",
                 }}
               >
-                {loggedInUserName === comment.commented_by && (
+                {loggedInUserName === reply.commented_by && (
                   <Button
                     style={{
                       border: "1px solid rgb(255,255,255,0.2)",
                       backgroundColor: "#151533",
-                      padding: "3px 18px",
+                      padding: "3px 10px",
                       margin: "5px",
+                      fontSize: "12px",
                     }}
                     onClick={() => {
                       if (isLoggedIn === true) {
-                        fetchComment(comment.id);
+                        fetchComment(reply.id);
                         handleShow();
                       } else if (isLoggedIn === false) {
                         handleShowModalForSignUp();
@@ -419,147 +643,7 @@ function ReadBlogs() {
                     Edit
                   </Button>
                 )}
-                <Button
-                  style={{
-                    border: "1px solid rgb(255,255,255,0.2)",
-                    backgroundColor: "#151533",
-                    padding: "3px 18px",
-                    margin: "5px",
-                  }}
-                  onClick={() => {
-                    if (isLoggedIn === true) {
-                      setTopLevelCommentID(comment.id);
-                      setReplyingTo(comment.commented_by);
-                      handleshowModalToAddComment();
-                    } else if (isLoggedIn === false) {
-                      handleShowModalForSignUp();
-                    }
-                  }}
-                >
-                  Reply
-                </Button>
-                {loggedInUserName === comment.commented_by && (
-                  <Button
-                    style={{
-                      border: "1px solid rgb(255,255,255,0.2)",
-                      backgroundColor: "#151533",
-                      padding: "3px 18px",
-                      margin: "5px",
-                    }}
-                    onClick={() => {
-                      if (isLoggedIn === true) {
-                        deleteComment(comment.id);
-                      } else if (isLoggedIn === false) {
-                        handleShowModalForSignUp();
-                      }
-                    }}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </Container>
-            </Container>
-          </Container>
-        )}
-
-        {comment.replyComments.length > 0 &&
-          comment.replyComments.map((reply) => (
-            <Container
-              key={reply.id}
-              fluid
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                borderRadius: "6px",
-                margin: "5px 0 5px 50px",
-                width: "90%",
-                border: "1px solid rgb(255,255,255,0.2)",
-              }}
-            >
-              {reply.commented_by !== null && (
-                <Container
-                  fluid
-                  style={{
-                    height: "45px",
-                    width: "45px",
-                    objectFit: "cover",
-                    borderRadius: "50%",
-                    // marginTop: "5px",
-                    backgroundColor: "#151533",
-                    border: "1px solid rgb(255,255,255,0.2)",
-                    background: "green",
-                    fontSize: "22px",
-                    color: "white",
-                    fontWeight: "bold",
-                    alignItems: "center",
-                  }}
-                >
-                  {getFirstLetterOfName(reply.commented_by)}
-                </Container>
-              )}
-              <Container
-                fluid
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "start",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-              >
-                <Container
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    justifyContent: "start",
-                    alignItems: "start",
-                    gap: "20px",
-                  }}
-                >
-                  <Card.Text style={{ textWrap: "nowrap" }}>
-                    {reply.commented_by}
-                  </Card.Text>{" "}
-                  <Card.Text style={{ textWrap: "nowrap" }}>
-                    {new Date(reply.createdAt).toLocaleString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </Card.Text>
-                </Container>
-                <Container fluid>{reply.commentBody}</Container>
-                <Container
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    justifyContent: "start",
-                    alignItems: "start",
-                  }}
-                >
-                  {loggedInUserName === reply.commented_by && (
-                    <Button
-                      style={{
-                        border: "1px solid rgb(255,255,255,0.2)",
-                        backgroundColor: "#151533",
-                        padding: "3px 18px",
-                        margin: "5px",
-                      }}
-                      onClick={() => {
-                        if (isLoggedIn === true) {
-                          fetchComment(reply.id);
-                          handleShow();
-                        } else if (isLoggedIn === false) {
-                          handleShowModalForSignUp();
-                        }
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  )}
-                  <Button
+                {/* <Button
                     style={{
                       border: "1px solid rgb(255,255,255,0.2)",
                       backgroundColor: "#151533",
@@ -570,6 +654,9 @@ function ReadBlogs() {
                       if (isLoggedIn === true) {
                         setTopLevelCommentID(reply.id);
                         setReplyingTo(reply.commented_by);
+                        setIsComment(false);
+                        setIsReply(true);
+                        setAuthorID(reply.userID);
                         handleshowModalToAddComment();
                       } else if (isLoggedIn === false) {
                         handleShowModalForSignUp();
@@ -577,27 +664,27 @@ function ReadBlogs() {
                     }}
                   >
                     Reply
+                  </Button> */}
+                {loggedInUserName === reply.commented_by && (
+                  <Button
+                    style={{
+                      border: "1px solid rgb(255,255,255,0.2)",
+                      backgroundColor: "#151533",
+                      padding: "3px 10px",
+                      margin: "5px",
+                      fontSize: "12px",
+                    }}
+                    onClick={() => {
+                      if (isLoggedIn === true) {
+                        deleteComment(reply.id);
+                      } else if (isLoggedIn === false) {
+                        handleShowModalForSignUp();
+                      }
+                    }}
+                  >
+                    Delete
                   </Button>
-                  {loggedInUserName === reply.commented_by && (
-                    <Button
-                      style={{
-                        border: "1px solid rgb(255,255,255,0.2)",
-                        backgroundColor: "#151533",
-                        padding: "3px 18px",
-                        margin: "5px",
-                      }}
-                      onClick={() => {
-                        if (isLoggedIn === true) {
-                          deleteComment(reply.id);
-                        } else if (isLoggedIn === false) {
-                          handleShowModalForSignUp();
-                        }
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  )}
-                </Container>
+                )}
               </Container>
             </Container>
           ))}
@@ -611,7 +698,7 @@ function ReadBlogs() {
     }
     try {
       const data = await fetch(
-        `${BACKEND_API}/api/blog/updatebloglikes/${blogdetails.id}`,
+        `${BACKEND_API}/api/blog/updatebloglikes/${blogdetails.id}/${blogdetails.authorID}`,
         {
           method: "PUT",
           headers: {
@@ -625,6 +712,7 @@ function ReadBlogs() {
       if (response.success) {
         setBlogdetails(response.post);
         isBlogLikedByUser(blogdetails.id);
+        fetchNotificationsForLoggedInUser();
       }
     } catch (error) {
       console.log("Error while adding Blog Like", error);
@@ -910,6 +998,9 @@ function ReadBlogs() {
                 onClick={() => {
                   if (isLoggedIn === true) {
                     handleshowModalToAddComment();
+                    setIsComment(true);
+                    setIsReply(false);
+                    setAuthorID(blogdetails.authorID);
                   } else if (isLoggedIn === false) {
                     handleShowModalForSignUp();
                   }
@@ -917,6 +1008,21 @@ function ReadBlogs() {
               >
                 <MessageSquareMore style={{ marginRight: "10px" }} />{" "}
                 {sumOfComments}
+              </Button>
+              <Button
+                style={{
+                  fontSize: "16px",
+                  border: "1px solid rgb(255,255,255,0.2)",
+                }}
+                onClick={() => {
+                  if (isLoggedIn === true) {
+                    handleShowModalForShare();
+                  } else if (isLoggedIn === false) {
+                    handleShowModalForSignUp();
+                  }
+                }}
+              >
+                Share
               </Button>
               {isSavedForLater === true && (
                 <Button
@@ -952,121 +1058,6 @@ function ReadBlogs() {
                 </Button>
               )}
             </Card.Footer>
-            <Card.Footer
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "start",
-                border: "1px solid rgb(255,255,255,0.2)",
-                width: "90%",
-                margin: "5px auto",
-                borderRadius: "6px",
-                flexWrap: "wrap",
-                gap: "10px",
-              }}
-            >
-              <Button
-                style={{
-                  fontSize: "16px",
-                  border: "1px solid rgb(255,255,255,0.2)",
-                }}
-              >
-                Share with friends
-              </Button>
-
-              <Button
-                variant="primary"
-                text={urlToBeShared}
-                onClick={() => {
-                  handleBlogShares("Link Copied");
-                  toast.success("Link Copied");
-                }}
-                style={{ background: "none", border: "none" }}
-              >
-                <FaLink size={35} />
-              </Button>
-
-              <TelegramShareButton
-                url={urlToBeShared}
-                title={blogdetails.title}
-                onClick={() => {
-                  handleBlogShares("Telegram");
-                }}
-              >
-                <TelegramIcon size={45} round={true} />
-              </TelegramShareButton>
-
-              <TwitterShareButton
-                url={urlToBeShared}
-                title={blogdetails.title}
-                onClick={() => {
-                  handleBlogShares("Twitter");
-                }}
-              >
-                <XIcon size={45} round={true} />
-              </TwitterShareButton>
-
-              <FacebookMessengerShareButton
-                url={urlToBeShared}
-                onClick={() => {
-                  handleBlogShares("Facebook");
-                }}
-              >
-                <FacebookIcon size={45} round={true} />
-              </FacebookMessengerShareButton>
-
-              <FacebookMessengerShareButton
-                url={urlToBeShared}
-                onClick={() => {
-                  handleBlogShares("Messenger");
-                }}
-              >
-                <FacebookMessengerIcon size={45} round={true} />
-              </FacebookMessengerShareButton>
-
-              <LinkedinShareButton
-                url={urlToBeShared}
-                onClick={() => {
-                  handleBlogShares("Linkedin");
-                }}
-              >
-                <LinkedinIcon size={45} round={true} />
-              </LinkedinShareButton>
-
-              <WhatsappShareButton
-                url={urlToBeShared}
-                title={blogdetails.title}
-                separator=":: "
-                onClick={() => {
-                  handleBlogShares("Whatsapp");
-                }}
-              >
-                <WhatsappIcon size={45} round={true} />
-              </WhatsappShareButton>
-
-              <EmailShareButton
-                url={urlToBeShared}
-                subject={blogdetails.title}
-                body="body"
-                separator=" "
-                onClick={() => {
-                  handleBlogShares("Email");
-                }}
-              >
-                <EmailIcon size={45} round={true} />
-              </EmailShareButton>
-
-              <RedditShareButton
-                url={urlToBeShared}
-                windowWidth={660}
-                windowHeight={460}
-                onClick={() => {
-                  handleBlogShares("Reddit");
-                }}
-              >
-                <RedditIcon size={45} round={true} />
-              </RedditShareButton>
-            </Card.Footer>
 
             <Card.Footer
               style={{
@@ -1083,6 +1074,9 @@ function ReadBlogs() {
                 onClick={() => {
                   if (isLoggedIn === true) {
                     handleshowModalToAddComment();
+                    setIsComment(true);
+                    setIsReply(false);
+                    setAuthorID(blogdetails.authorID);
                   } else if (isLoggedIn === false) {
                     handleShowModalForSignUp();
                   }
@@ -1102,7 +1096,13 @@ function ReadBlogs() {
                 </Form.Group>
               </Form>
             </Card.Footer>
-            <Container style={{ width: "100%" }} fluid>
+            <Container
+              style={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               {renderComments(allComments)}
             </Container>
           </Card>
@@ -1344,6 +1344,7 @@ function ReadBlogs() {
                     {moreBlogsBySameAuthor.map((blog) => (
                       <>
                         <ScrollIntoView selector="#top">
+                          {" "}
                           <Card.Text
                             to={`/readblog/${blog.id}`}
                             as={Link}
@@ -1357,7 +1358,7 @@ function ReadBlogs() {
                               margin: "10px auto",
                               textDecoration: "none",
                               color: "white",
-                              width: "80vw",
+                              width: "100%",
                             }}
                           >
                             {blog.title}
@@ -1667,6 +1668,8 @@ function ReadBlogs() {
                 style={{ backgroundColor: "red" }}
                 onClick={() => {
                   setTopLevelCommentID("");
+                  setIsComment(false);
+                  setIsReply(false);
                   handleCloseModalToAddComment();
                 }}
               >
@@ -1677,6 +1680,132 @@ function ReadBlogs() {
         </Modal.Body>
       </Modal>
       <Footer />
+      <Modal
+        centered
+        show={showModalForShare}
+        onHide={handleCloseModalForShare}
+      >
+        <Modal.Body
+          style={{
+            borderRadius: "6px",
+            backgroundColor: "#151533",
+            border: "1px solid rgb(255,255,255,0.2)",
+          }}
+        >
+          <p
+            style={{
+              textAlign: "center",
+              margin: "10px auto 10px auto",
+              fontSize: "22px",
+            }}
+          >
+            Choose a platform to share
+          </p>
+          <Container
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+              margin: "5px auto",
+              borderRadius: "6px",
+              flexWrap: "wrap",
+              gap: "10px",
+              padding: "10px",
+            }}
+          >
+            <Button
+              variant="primary"
+              text={urlToBeShared}
+              onClick={() => {
+                handleBlogShares("Link Copied");
+                toast.success("Link Copied");
+              }}
+              style={{ background: "none", border: "none" }}
+            >
+              <FaLink size={35} />
+            </Button>
+
+            <TelegramShareButton
+              url={urlToBeShared}
+              title={blogdetails.title}
+              onClick={() => {
+                handleBlogShares("Telegram");
+              }}
+            >
+              <TelegramIcon size={45} round={true} />
+            </TelegramShareButton>
+
+            <TwitterShareButton
+              url={urlToBeShared}
+              title={blogdetails.title}
+              onClick={() => {
+                handleBlogShares("Twitter");
+              }}
+            >
+              <XIcon size={45} round={true} />
+            </TwitterShareButton>
+
+            <FacebookMessengerShareButton
+              url={urlToBeShared}
+              onClick={() => {
+                handleBlogShares("Facebook");
+              }}
+            >
+              <FacebookIcon size={45} round={true} />
+            </FacebookMessengerShareButton>
+
+            <FacebookMessengerShareButton
+              url={urlToBeShared}
+              onClick={() => {
+                handleBlogShares("Messenger");
+              }}
+            >
+              <FacebookMessengerIcon size={45} round={true} />
+            </FacebookMessengerShareButton>
+
+            <LinkedinShareButton
+              url={urlToBeShared}
+              onClick={() => {
+                handleBlogShares("Linkedin");
+              }}
+            >
+              <LinkedinIcon size={45} round={true} />
+            </LinkedinShareButton>
+
+            <WhatsappShareButton
+              url={urlToBeShared}
+              title={blogdetails.title}
+              separator=":: "
+              onClick={() => {
+                handleBlogShares("Whatsapp");
+              }}
+            >
+              <WhatsappIcon size={45} round={true} />
+            </WhatsappShareButton>
+
+            <RedditShareButton
+              url={urlToBeShared}
+              windowWidth={660}
+              windowHeight={460}
+              onClick={() => {
+                handleBlogShares("Reddit");
+              }}
+            >
+              <RedditIcon size={45} round={true} />
+            </RedditShareButton>
+          </Container>
+          <Button
+            onClick={() => {
+              handleCloseModalForShare();
+            }}
+            style={{ display: "block", margin: "15px auto" }}
+          >
+            Close
+          </Button>
+        </Modal.Body>
+      </Modal>
     </>
   );
 }

@@ -19,9 +19,10 @@ import DisplaySearchResult from "./Components/DisplaySearchResult.jsx";
 import BlogsSavedForLater from "./Components/BlogsSavedForLater.jsx";
 import ScheduledBlogs from "./Components/ScheduledBlogs.jsx";
 import AccessDenied from "./Components/AccessDenied.jsx";
+import Notifications from "./Components/Notifications.jsx";
 
 function App() {
-  const { isAdmin, isLoggedIn } = useContext(BlogContext);
+  const { isUserAdmin, isLoggedIn } = useContext(BlogContext);
 
   return (
     <>
@@ -36,6 +37,11 @@ function App() {
               element={<DisplaySearchResult />}
             />
 
+            <Route
+              exact
+              path="/readblog/:id/:commentIDForNotification"
+              element={<ReadBlogs />}
+            />
             <Route exact path="/readblog/:id" element={<ReadBlogs />} />
             {isLoggedIn && (
               <>
@@ -60,8 +66,13 @@ function App() {
                   path="/savedforlater"
                   element={<BlogsSavedForLater />}
                 />
+                <Route
+                  exact
+                  path="/notifications"
+                  element={<Notifications />}
+                />
                 <Route exact path="/scheduled" element={<ScheduledBlogs />} />
-                {isAdmin ? (
+                {isUserAdmin ? (
                   <Route exact path="/users" element={<UsersList />} />
                 ) : (
                   <Route exact path="/users" element={<AccessDenied />} />

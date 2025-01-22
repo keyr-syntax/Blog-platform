@@ -25,7 +25,7 @@ router.put(
   userAuthenticationMiddleware,
   updateUserProfile
 );
-router.get("/fetchauthorprofile/:id", fetchAuthorProfile);
+router.get("/fetchauthorprofile/:id/:blogID", fetchAuthorProfile);
 router.delete("/deleteuser/:id", AdminAuthenticationMiddleware, deleteuser);
 
 module.exports = router;

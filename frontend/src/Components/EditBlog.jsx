@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { X } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./CreateBlog.css";
-
+import Spinner from "react-bootstrap/Spinner";
 function EditBlog() {
   const { BACKEND_API, imagelist, fetchallimages, fetchallblogs } =
     useContext(BlogContext);
@@ -434,7 +434,8 @@ function EditBlog() {
               style={{
                 backgroundColor: "green",
                 border: "1px solid rgb(255,255,255,0.2)",
-                margin: "15px auto",
+                margin: "10px auto",
+                width: "80%",
               }}
               type="submit"
               onClick={() => {
@@ -447,7 +448,8 @@ function EditBlog() {
               style={{
                 backgroundColor: "green",
                 border: "1px solid rgb(255,255,255,0.2)",
-                margin: "15px auto",
+                margin: "10px auto",
+                width: "80%",
               }}
               type="submit"
               onClick={() => {
@@ -460,7 +462,8 @@ function EditBlog() {
               style={{
                 backgroundColor: "green",
                 border: "1px solid rgb(255,255,255,0.2)",
-                margin: "15px auto",
+                margin: "10px auto",
+                width: "80%",
               }}
               type="button"
               onClick={() => {
@@ -525,7 +528,20 @@ function EditBlog() {
                 type="submit"
                 disabled={imageUploading}
               >
-                {imageUploading === true ? "Uploading" : "Submit"}
+                {imageUploading === true ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                    />
+                    <span style={{ marginLeft: "3px" }}>Uploading Picture</span>
+                  </>
+                ) : (
+                  "Submit"
+                )}
               </Button>
               <Button
                 style={{
@@ -565,7 +581,18 @@ function EditBlog() {
                 placeholder="schedule your blog to be published"
                 name="datetime-local"
                 min={new Date().toISOString().slice(0, 16)}
-                value={scheduledFor.toISOString().slice(0, 16)}
+                value={
+                  scheduledFor
+                    ? new Intl.DateTimeFormat("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      }).format(scheduledFor)
+                    : ""
+                }
                 selected={scheduledFor}
                 onChange={(event) => {
                   const localDateString = event.target.value;

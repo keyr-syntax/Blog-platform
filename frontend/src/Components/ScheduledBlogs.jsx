@@ -10,9 +10,9 @@ import Button from "react-bootstrap/Button";
 import "./ManageBlog.css";
 
 function ScheduledBlogs() {
-  const { blogcontent, fetchallblogs, BACKEND_API, setBlogcontent } =
-    useContext(BlogContext);
+  const { fetchallblogs, BACKEND_API, fetchTopBlogs } = useContext(BlogContext);
   const [scheduledFor, setScheduledFor] = useState(new Date());
+  const [scheduledBlogList, setScheduledBlogList] = useState([]);
   const [id, setId] = useState("");
   const [blogSchedulerModal, setBlogSchedulerModal] = useState(false);
   const handleCloseBlogSchedulerModal = () => setBlogSchedulerModal(false);
@@ -34,7 +34,7 @@ function ScheduledBlogs() {
       });
       const response = await data.json();
       if (response.success === true) {
-        setBlogcontent(response.post);
+        setScheduledBlogList(response.post);
       } else if (response.success === false) {
         toast.error(response.message);
       }
@@ -59,9 +59,9 @@ function ScheduledBlogs() {
 
       const response = await data.json();
       if (response.success === true) {
-        setBlogcontent(response.post);
+        setScheduledBlogList(response.post);
         fetchScheduledBlogs();
-
+        fetchTopBlogs();
         const published = response.post.isPublished;
         {
           published === true && toast.success("Blog published successfully");
@@ -99,6 +99,7 @@ function ScheduledBlogs() {
         fetchScheduledBlogs();
         toast.success(response.message);
         handleCloseBlogSchedulerModal();
+        fetchTopBlogs();
       } else if (response.success === false) {
         toast.error(response.message);
       }
@@ -120,7 +121,8 @@ function ScheduledBlogs() {
         const response = await data.json();
         if (response.success === true) {
           fetchallblogs();
-
+          fetchScheduledBlogs();
+          fetchTopBlogs();
           toast.success(response.message);
         } else if (response.success === false) {
           toast.error(response.message);
@@ -134,7 +136,7 @@ function ScheduledBlogs() {
   return (
     <>
       {" "}
-      {blogcontent && blogcontent.length > 0 ? (
+      {scheduledBlogList && scheduledBlogList.length > 0 ? (
         <>
           <p
             style={{
@@ -161,7 +163,7 @@ function ScheduledBlogs() {
               </tr>
             </thead>
             <tbody>
-              {blogcontent.map(
+              {scheduledBlogList.map(
                 (blog) =>
                   blog && (
                     <tr style={{ textWrap: "wrap" }} key={blog.id}>

@@ -1,10 +1,10 @@
 <IfModule mod_rewrite.c>
-  RewriteEngine On 
-  RewriteBase / 
-  RewriteRule ^index\.html$ - [L] 
-  RewriteCond %{REQUEST_FILENAME} !-f 
-  RewriteCond %{REQUEST_FILENAME} !-d 
-  RewriteCond %{REQUEST_FILENAME} !-l 
-  RewriteRule . /index.html [L]
+  RewriteEngine On RewriteBase / RewriteRule ^index\.html$ - [L] RewriteCond
+  %{REQUEST_FILENAME} !-f RewriteCond %{REQUEST_FILENAME} !-d RewriteCond
+  %{REQUEST_FILENAME} !-l RewriteRule . /index.html [L]
 </IfModule>
-
+RewriteEngine on RewriteCond %{HTTPS} off RewriteCond %{HTTP:X-Forwarded-SSL}
+!on RewriteCond %{HTTP_HOST} ^syntax\-blog\-platform\-project\.keyrunasir\.com$
+[OR] RewriteCond %{HTTP_HOST}
+^www\.syntax\-blog\-platform\-project\.keyrunasir\.com$ RewriteRule ^/?$
+"https\:\/\/syntax\-blog\-platform\-project\.keyrunasir\.com\/" [R=301,L]

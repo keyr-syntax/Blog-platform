@@ -13,7 +13,7 @@ const blogLikesCounterRoutes = require("./routes/blogLikesCounterRoutes.js");
 const blogSharesCounterRoutes = require("./routes/blogSharesCounterRoutes.js");
 const AIGeneratedResponseRoutes = require("./routes/AIGeneratedResponseRoutes.js");
 const saveBlogsForLaterRoutes = require("./routes/saveBlogForLaterRoutes.js");
-
+const notificationRoutes = require("./routes/notificationRoutes.js");
 const BLOG = require("./models/BlogModel.js");
 const modelAssociation = require("./models/ModelAssociations.js");
 require("./models/BlogModel.js");
@@ -43,11 +43,10 @@ app.use("/api/shares", blogSharesCounterRoutes);
 app.use("/api/ai", AIGeneratedResponseRoutes);
 app.use("/api/tags", blogTagsRoutes);
 app.use("/api/saveblogforlater", saveBlogsForLaterRoutes);
+app.use("/api/notification", notificationRoutes);
 
 cron.schedule("* * * * *", async () => {
   const now = new Date();
-  console.log("Cron scheduler is working:", now);
-
   try {
     const blogsOnSchedule = await BLOG.findAll({
       where: {
@@ -66,8 +65,7 @@ cron.schedule("* * * * *", async () => {
           blog.isPublished = true;
           blog.isScheduled = false;
           blog.isDraft = false;
-          const blogPublished = await blog.save();
-          console.log("Cron scheduler-blogPublished", blogPublished);
+          await blog.save();
         }
       } catch (error) {
         console.log(`Error while scheduling blogID: ${blog.id}`, error);
@@ -81,7 +79,7 @@ cron.schedule("* * * * *", async () => {
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "The Backend for Blog platform is working fine",
+    message: "Backend for syntax blog is working perfectly",
   });
 });
 

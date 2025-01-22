@@ -3,7 +3,7 @@ import Button from "react-bootstrap/Button";
 import { BlogContext } from "./ContextProvider.jsx";
 import { useContext, useState } from "react";
 import toast from "react-hot-toast";
-
+import Spinner from "react-bootstrap/Spinner";
 function AIGeneratedContent() {
   const { BACKEND_API } = useContext(BlogContext);
   const [question, setQuestion] = useState("");
@@ -83,7 +83,20 @@ function AIGeneratedContent() {
           />
         </Form.Group>
         <Button style={{ width: "100%" }} type="submit" variant="primary">
-          {generatingContent === true ? "Generating..." : "Generate Content"}
+          {generatingContent === true ? (
+            <>
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+              <span style={{ marginLeft: "3px" }}>Processing...</span>
+            </>
+          ) : (
+            "Send"
+          )}
         </Button>
       </Form>
       {responseFromAI !== "" && (

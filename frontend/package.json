@@ -1,5 +1,6 @@
 {
   "name": "frontend",
+  "homepage": "https://syntax-blog-platform-project.keyrunasir.com",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,8 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "postinstall": "node ./postinstall.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@tinymce/tinymce-react": "^5.1.1",

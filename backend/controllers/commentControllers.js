@@ -1,5 +1,7 @@
 const Comment = require("../models/BlogCommentModel.js");
 
+const NOTIFICATION = require("../models/NotificationModel.js");
+
 const addComment = async (req, res) => {
   if (
     !req.body.commentBody ||
@@ -21,6 +23,19 @@ const addComment = async (req, res) => {
       userID: req.user.id,
     });
 
+    const createNotification = await NOTIFICATION.create({
+      commentID: addNewComment.id,
+      userID: req.user.id,
+      userName: req.user.username,
+      commentBody: req.body.commentBody,
+      isComment: req.body.isComment,
+      isReply: req.body.isReply,
+      isLike: false,
+      blogID: req.body.blogID,
+      authorIDOrRepliedTo: req.body.authorID,
+      isNotified: false,
+    });
+    console.log("createNotification", createNotification);
     if (addNewComment) {
       return res.status(201).json({
         success: true,
@@ -83,6 +98,13 @@ const deleteComment = async (req, res) => {
 
     if (findCommentByPk.userID === userID || req.user.isAdmin === true) {
       const deleted = await findCommentByPk.destroy();
+      const deleteNotification = await NOTIFICATION.findOne({
+        where: {
+          commentID: id,
+        },
+      });
+      await deleteNotification.destroy();
+
       if (deleted) {
         return res.status(200).json({
           success: true,
