@@ -6,12 +6,10 @@ const USER = require("../models/userModel.js");
 const BLOG = require("../models/BlogModel.js");
 const { Op } = require("sequelize");
 require("dotenv").config();
-const TOKEN_SECRET =
-  "f7184f99b71a947afe96623b9811e04c455955c734ec1e7ddb917734e03128f2126b101e60d61e4ad7245295178378bf44fbc1e4b57092ba0e82faa73a76379c";
 
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: TOKEN_SECRET,
+  secretOrKey: process.env.TOKEN_SECRET,
 };
 
 passport.use(

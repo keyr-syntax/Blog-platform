@@ -86,7 +86,6 @@ function NavigationBar() {
       console.log("Error during login", error);
     }
   };
-
   const handleCreateUser = async (e) => {
     e.preventDefault();
 
@@ -175,7 +174,7 @@ function NavigationBar() {
                   background: "#0D6EFD",
                   borderRadius: "5px",
                 }}
-                to="/searchresult"
+                // to="/searchresult"
                 onClick={() => {
                   searchBlogs(keyword);
                 }}
@@ -831,7 +830,7 @@ function NavigationBar() {
               type="button"
               style={{ color: "white", fontSize: "18px" }}
               onClick={() => {
-                handleShowModalForSignUp();
+                +handleShowModalForSignUp();
                 handleCloseModalForLogin();
               }}
             >

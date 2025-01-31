@@ -31,7 +31,11 @@ sequelize
   .sync()
   .then(() => console.log("Database synced"))
   .catch((error) => console.error("Error syncing database:", error));
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://syntax-blog-platform-project.keyrunasir.com",
+  })
+);
 app.use(express.json({ limit: "50mb" }));
 app.use("/api/blog", blogRoutes);
 app.use("/api/image", imageRoutes);

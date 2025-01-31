@@ -11,7 +11,7 @@ function RegisterUser() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
+  // const [isBlocked, setIsBlocked] = useState(false);
 
   const navigate = useNavigate();
 

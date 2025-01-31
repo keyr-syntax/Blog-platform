@@ -1,13 +1,12 @@
 import { createContext, useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const BlogContext = createContext();
 // eslint-disable-next-line react/prop-types
 function ContextProvider({ children }) {
-  const BACKEND_API = "https://test-subdomain.keyrunasir.com";
-  // const BACKEND_API = "http://localhost:5000";
-
+  const BACKEND_API = "http://localhost:5000";
   const [username, setUsername] = useState("syntax blog");
   const [email, setEmail] = useState("syntax@gmail.com");
   const [password, setPassword] = useState("admin");
@@ -38,7 +37,7 @@ function ContextProvider({ children }) {
   const [displaySearchResult, setDisplaySearchResult] = useState(false);
   const [displaySearchResultByTag, setDisplaySearchResultByTag] =
     useState(false);
-
+  const navigate = useNavigate();
   useEffect(() => {
     handleLoginUser();
     userAuthentication();
@@ -97,13 +96,12 @@ function ContextProvider({ children }) {
         }
       );
       const response = await data.json();
-      console.log("Search result", response);
       if (response.success === true) {
         setSearchResult(response.post);
         setDisplaySearchResult(true);
+        navigate("/searchresult");
       } else if (response.success === false) {
-        setSearchResult([]);
-        setDisplaySearchResult(true);
+        toast.error(response.message);
       }
     } catch (error) {
       console.log("Error while fetching search result", error);
@@ -137,6 +135,7 @@ function ContextProvider({ children }) {
       console.log("Error while fetching search result", error);
     }
   };
+
   const fetchallblogs = async () => {
     try {
       const data = await fetch(`${BACKEND_API}/api/blog/fetchallblogs`, {

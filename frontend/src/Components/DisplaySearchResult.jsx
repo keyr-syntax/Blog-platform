@@ -65,7 +65,6 @@ function DisplaySearchResult() {
               background: "#0D6EFD",
               borderRadius: "5px",
             }}
-            to="/searchresult"
             onClick={() => {
               searchBlogs(keyword);
             }}
@@ -278,7 +277,7 @@ function DisplaySearchResult() {
           </Row>
         </>
       )}
-      {searchResult && searchResult.length <= 0 && (
+      {searchResult && searchResult.length === 0 && (
         <Container style={{ margin: "70px auto 10px auto" }}>
           <h4 style={{ color: "white", textAlign: "center" }}>
             No Blogs Found

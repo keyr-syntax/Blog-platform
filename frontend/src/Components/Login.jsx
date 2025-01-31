@@ -16,7 +16,7 @@ function Login() {
     e.preventDefault();
 
     try {
-      const data = await fetch(`${BACKEND_API}/api/user/login`, {
+      const data = await fetch(`${BACKEND_API}/api/user/authenticate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,6 +26,7 @@ function Login() {
           email,
           password,
         }),
+        credentials: "include",
       });
 
       const response = await data.json();

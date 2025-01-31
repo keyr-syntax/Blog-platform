@@ -16,7 +16,6 @@ import { FaShare } from "react-icons/fa";
 import { MessageSquareMore } from "lucide-react";
 import { FaLink } from "react-icons/fa";
 import {
-  EmailShareButton,
   FacebookMessengerShareButton,
   LinkedinShareButton,
   RedditShareButton,
@@ -785,7 +784,6 @@ function ReadBlogs() {
               background: "#0D6EFD",
               borderRadius: "5px",
             }}
-            to="/searchresult"
             onClick={() => {
               searchBlogs(keyword);
             }}
@@ -806,8 +804,8 @@ function ReadBlogs() {
           >
             <Card.Img
               style={{
-                height: "180px",
-                objectFit: "fill",
+                height: "200px",
+                objectFit: "cover",
                 width: "90%",
                 margin: "20px auto 5px auto",
               }}
@@ -1429,7 +1427,7 @@ function ReadBlogs() {
                     >
                       <Card.Img
                         style={{
-                          height: "130px",
+                          height: "180px",
                           objectFit: "fill",
                           width: "90%",
                           margin: "10px auto 5px auto",
@@ -1457,7 +1455,7 @@ function ReadBlogs() {
                             flexDirection: "row",
                             justifyContent: "start",
                             alignItems: "start",
-                            border: "1px solid rgb(255,255,255,0.2)",
+                            // border: "1px solid rgb(255,255,255,0.2)",
                             borderRadius: "6px",
                             margin: "-5px auto 0 auto",
                           }}
