@@ -15,24 +15,26 @@ This advanced blog platform has the following features:-
 9. Blog scheduling: Bloggers can schedule posts for future publication.
 10. Media gallery: Bloggers can upload and store images for use in their blogs.
 
+## Usage
+
+## First clone the repository into your Laptop
 ```sh
-https://github.com/PixelFlows2/intern-project-backend.git
+https://github.com/keyr-syntax/Blog-platform.git
 ```
 
-## Install the dependencies
+## Inside the backend folder fill the following values in .env file.
 
 ```sh
-npm install
-```
-
-## Before you run the backend, Create .env file and add the following values to .env file. You need to replace MONGODB_ATLAS API key by your own API key. Other .env values are provided.
-
-```sh
-MONGODB_ATLAS="your mongodb atlas api"
-PORT=5000
-TOKEN_SECRET="f7184f99b71a947afe96623b9811e04c455955c734ec1e7ddb917734e03128f2126b101e60d61e4ad7245295178378bf44fbc1e4b57092ba0e82faa73a76379c";
-NODE_ENV="development"
-FRONTEND_PORT="http://localhost:5173"
+OPENAI_API_KEY=your-openai-api-key
+DB_NAME=MySQL database name
+DB_USER=MySQL database user
+DB_PASSWORD=MySQL database password
+DB_HOST=localhost
+DB_DIALECT=mysql
+TOKEN_SECRET="your JWT token secret"
+cloud_name=cloudinary name for image storage
+api_key=cloudinary api key
+api_secret=cloudinary secret
 ```
 
 
