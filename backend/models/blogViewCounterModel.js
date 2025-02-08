@@ -1,6 +1,5 @@
-const { DataTypes, Model, UUIDV4 } = require("sequelize");
+const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/dbMySQL.js");
-const USER = require("./userModel.js");
 
 class BLOG_VIEW_COUNTER extends Model {}
 

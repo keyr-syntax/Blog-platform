@@ -1,8 +1,5 @@
-const { DataTypes, Model, UUIDV4 } = require("sequelize");
+const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/dbMySQL.js");
-
-const USER = require("../models/userModel.js");
-const BLOG = require("./BlogModel.js");
 class BLOG_LIKES_COUNTER extends Model {}
 
 BLOG_LIKES_COUNTER.init(
