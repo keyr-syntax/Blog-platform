@@ -2,8 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
   userAuthenticationMiddleware,
-  AdminAuthenticationMiddleware,
-} = require("../controllers/userControllers.js");
+} = require("../middleware/userAuthenticationMiddleware.js");
 
 const generateBlogContentByAI = require("../controllers/AIGeneratedContentController.js");
 

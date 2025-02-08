@@ -6,8 +6,7 @@ const {
 } = require("../controllers/notificationControllers.js");
 const {
   userAuthenticationMiddleware,
-  AdminAuthenticationMiddleware,
-} = require("../controllers/userControllers.js");
+} = require("../middleware/userAuthenticationMiddleware.js");
 
 router.get(
   "/allnotifications",

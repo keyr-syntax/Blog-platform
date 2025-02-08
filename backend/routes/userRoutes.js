@@ -6,13 +6,16 @@ const {
   fetchallusers,
   fetchuserbypk,
   updateUserByAdmin,
-  userAuthentication,
-  userAuthenticationMiddleware,
-  AdminAuthenticationMiddleware,
   deleteuser,
   updateUserProfile,
   fetchAuthorProfile,
 } = require("../controllers/userControllers.js");
+
+const {
+  userAuthentication,
+  userAuthenticationMiddleware,
+  AdminAuthenticationMiddleware,
+} = require("../middleware/userAuthenticationMiddleware.js");
 
 router.post("/register", createUser);
 router.post("/login", loginUser);

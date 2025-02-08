@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   AdminAuthenticationMiddleware,
   userAuthenticationMiddleware,
-} = require("../controllers/userControllers.js");
+} = require("../middleware/userAuthenticationMiddleware.js");
 
 const {
   fetchAllBlogviewsForAdmins,

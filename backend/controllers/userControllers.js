@@ -116,99 +116,7 @@ const loginUser = async (req, res) => {
     });
   }
 };
-const userAuthentication = (req, res, next) => {
-  const authenticationMiddleware = passport.authenticate(
-    "jwt",
-    { session: false },
-    (err, user, info) => {
-      if (err) {
-        console.log("Error while authenticating user", err);
-        return res.status(500).json({
-          success: false,
-          message: "You are not authorized to visit this page",
-        });
-      }
 
-      if (!user) {
-        return res.status(500).json({
-          success: false,
-          message: "You are not authorized to access this page",
-        });
-      }
-
-      if (user) {
-        return res.status(200).json({
-          success: true,
-          message: `user authenticated successfully`,
-          user: user,
-        });
-      }
-    }
-  );
-
-  authenticationMiddleware(req, res, next);
-};
-const userAuthenticationMiddleware = (req, res, next) => {
-  const authenticationMiddleware = passport.authenticate(
-    "jwt",
-    { session: false },
-    (err, user, info) => {
-      if (err) {
-        console.log("Error while authenticating user", err);
-        return res.status(500).json({
-          success: false,
-          message: "You are not authorized to visit this page",
-        });
-      }
-
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "You are not authorized to visit this page",
-        });
-      }
-
-      req.user = user;
-      next();
-    }
-  );
-
-  authenticationMiddleware(req, res, next);
-};
-const AdminAuthenticationMiddleware = (req, res, next) => {
-  const authenticationMiddleware = passport.authenticate(
-    "jwt",
-    { session: false },
-    (err, user, info) => {
-      if (err) {
-        console.log("Error while authenticating user", err);
-        return res.status(500).json({
-          success: false,
-          message: "You are not authorized to access this page",
-        });
-      }
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "You are not authorized to access this page",
-        });
-      }
-      if (user) {
-        console.log("Admin authentication", user);
-        if (user.isAdmin) {
-          req.user = user;
-          next();
-        } else {
-          return res
-            .status(404)
-            .json("You are not authorized to access this page");
-        }
-      }
-    }
-  );
-
-  authenticationMiddleware(req, res, next);
-};
 const fetchallusers = async (req, res) => {
   try {
     const fetchallusers = await USER.findAll();
@@ -434,9 +342,6 @@ module.exports = {
   fetchuserbypk,
   fetchAuthorProfile,
   updateUserProfile,
-  userAuthentication,
-  userAuthenticationMiddleware,
-  AdminAuthenticationMiddleware,
   deleteuser,
   updateUserByAdmin,
 };

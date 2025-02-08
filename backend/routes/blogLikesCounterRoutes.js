@@ -6,7 +6,7 @@ const {
 } = require("../controllers/blogLikesCounterControllers.js");
 const {
   userAuthenticationMiddleware,
-} = require("../controllers/userControllers.js");
+} = require("../middleware/userAuthenticationMiddleware.js");
 
 router.get("/fetchallbloglikes", fetchAllBlogLikes);
 router.get(

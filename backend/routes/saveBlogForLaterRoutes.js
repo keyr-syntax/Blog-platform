@@ -10,8 +10,7 @@ const {
 
 const {
   userAuthenticationMiddleware,
-  AdminAuthenticationMiddleware,
-} = require("../controllers/userControllers.js");
+} = require("../middleware/userAuthenticationMiddleware.js");
 
 router.post(
   "/saveblogforlater/:blogID",

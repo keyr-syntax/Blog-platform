@@ -3,14 +3,13 @@ const router = express.Router();
 const {
   createImageURL,
   fetchAllImages,
-
   deleteImage,
   createUserProfileImageURL,
 } = require("../controllers/imageController.js");
 
 const {
   userAuthenticationMiddleware,
-} = require("../controllers/userControllers.js");
+} = require("../middleware/userAuthenticationMiddleware.js");
 
 router.post("/createimageurl", userAuthenticationMiddleware, createImageURL);
 
