@@ -12,6 +12,7 @@ import Footer from "./Footer.jsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Eye } from "lucide-react";
 import { FaShare } from "react-icons/fa";
+import LoadingSpinner from "./Spinner.jsx";
 function HomePageListOfBlogs() {
   const {
     blogcontent,
@@ -179,7 +180,7 @@ function HomePageListOfBlogs() {
           )}
         </div>
       )}
-      {blogcontent.length > 0 && blogcontent && (
+      {blogcontent && blogcontent.length > 0 && (
         <>
           <Container
             fluid
@@ -371,7 +372,7 @@ function HomePageListOfBlogs() {
           </Row>
         </>
       )}{" "}
-      {topBlogsList.length > 0 && topBlogsList && (
+      {topBlogsList && topBlogsList.length > 0 && (
         <>
           <Container
             fluid
@@ -573,7 +574,11 @@ function HomePageListOfBlogs() {
           </Row>
         </>
       )}
-      <Footer />
+      {allBlogTags || blogcontent || topBlogsList ? (
+        <Footer />
+      ) : (
+        <LoadingSpinner />
+      )}
     </>
   );
 }
