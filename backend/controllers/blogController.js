@@ -85,7 +85,7 @@ const updateBlog = async (req, res) => {
     const tags_list = req.body.tags_list;
     const findPostByPk = await BLOG.findByPk(id);
     if (findPostByPk) {
-      const updatePost = await findPostByPk.update({
+      await findPostByPk.update({
         title: req.body.title,
         content: req.body.content,
         author: findPostByPk.author,
@@ -100,7 +100,7 @@ const updateBlog = async (req, res) => {
         likes: findPostByPk.likes,
         shares: findPostByPk.shares,
       });
-      const deletePreviousTags = await BLOG_TAGS.destroy({
+      await BLOG_TAGS.destroy({
         where: {
           blogID: findPostByPk.id,
         },
@@ -382,12 +382,11 @@ const fetchBlogByPk = async (req, res) => {
         },
       },
     });
-    const findAllBlogs = await BLOG.findAll();
 
     fetchonepost.views += 1;
     const countviewforpost = await fetchonepost.save();
 
-    const storeviewerprofile = await BLOG_VIEW_COUNTER.create({
+    await BLOG_VIEW_COUNTER.create({
       userID: null,
       viewer_username: null,
       blogID: req.params.id,
@@ -668,10 +667,8 @@ module.exports = {
   createBlog,
   blogsByOtherAuthors,
   updateBlogViews,
-
   updateBlogLikes,
   updateBlogShares,
-
   publishBlog,
   fetchBlogsSavedAsdraft,
   fetchScheduledBlogs,

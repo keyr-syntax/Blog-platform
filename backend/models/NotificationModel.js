@@ -42,7 +42,6 @@ NOTIFICATION.init(
       allowNull: false,
       defaultValue: false,
     },
-
     blogID: {
       type: DataTypes.INTEGER,
       allowNull: false,
